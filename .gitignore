@@ -1,0 +1,13 @@
+# package minted output
+_minted-*/
+
+# XeLaTex's output
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+
+# experiment directory
+experiment/
