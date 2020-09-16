@@ -16,7 +16,7 @@ bool BiTreeWidthAndHeight(BiTree tree, int *width, int *height)
     BiTree lastEnQueue;
 
     InitQueue(&queue, TreeWidthMax);
-    EnQueue(&queue, &tree);
+    EnQueue(&queue, tree);
     lastEnQueue = tree;         /* 每一层的最后一个入队列的元素 */
 
     while (!QueueEmpty(&queue)) {
@@ -29,11 +29,11 @@ bool BiTreeWidthAndHeight(BiTree tree, int *width, int *height)
             DeQueue(&queue, &node);
             width2 ++;
             if (NULL != node->lchild) {
-                EnQueue(&queue, &node->lchild);
+                EnQueue(&queue, node->lchild);
                 thisLayerLastEnQueue = node->lchild;
             }
             if (NULL != node->rchild) {
-                EnQueue(&queue, &node->rchild);
+                EnQueue(&queue, node->rchild);
                 thisLayerLastEnQueue = node->rchild;
             }
             if (lastEnQueue == node)

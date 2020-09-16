@@ -14,7 +14,7 @@ bool IsBracketsValid(char *brackets)
         case '{': Push(&stack, '{'); break;
         /* 右“括号”出栈 */
         case ')':
-            if (Empty(&stack)) {
+            if (StackEmpty(&stack)) {
                 DestroyStack(&stack);
                 return false;
             }
@@ -25,7 +25,7 @@ bool IsBracketsValid(char *brackets)
             }
             break;
         case ']':
-            if (Empty(&stack)) {
+            if (StackEmpty(&stack)) {
                 DestroyStack(&stack);
                 return false;
             }
@@ -36,7 +36,7 @@ bool IsBracketsValid(char *brackets)
             }
             break;
         case '}':
-            if (Empty(&stack)) {
+            if (StackEmpty(&stack)) {
                 DestroyStack(&stack);
                 return false;
             }
@@ -46,12 +46,12 @@ bool IsBracketsValid(char *brackets)
                 return false;
             }
             break;
-            break;
         default:
             break;
         }
     }
-    if (!Empty(&stack)) {
+    /* 栈不为空表明全是左括号 ((({{{[[[ 的情况 */
+    if (!StackEmpty(&stack)) {
         DestroyStack(&stack);
         return false;
     }

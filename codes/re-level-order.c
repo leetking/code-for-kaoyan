@@ -11,15 +11,15 @@ void ReLevelOrder(BiTree tree)
     InitQueue(&queue, BiTreeNodesMax);
     InitStack(&stack, BiTreeNodesMax);
 
-    EnQueue(&queue, &tree);
+    EnQueue(&queue, tree);
     while (!QueueEmpty(&tree)) {
         BiTree node;
         DeQueue(&queue, &node);
         Push(&stack, node->data);
         if (NULL != node->lchild)
-            EnQueue(&queue, &node->lchild);
+            EnQueue(&queue, node->lchild);
         if (NULL != node->rchild)
-            EnQueue(&queue, &node->rchild);
+            EnQueue(&queue, node->rchild);
     }
 
     while (!StackEmpty(&stack)) {

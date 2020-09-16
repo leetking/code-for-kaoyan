@@ -10,14 +10,14 @@ bool IsCompleteBiTree(BiTree tree)
     if (NULL == tree) return true;
     SeqQueue queue;
     InitQueue(&queue, BiTreeWidthMax);
-    EnQueue(&queue, &tree);
+    EnQueue(&queue, tree);
 
     while (!QueueEmpty(&queue)) {
         BiTree node;
         DeQueue(&queue, &node);
         if (NULL != node) {
-            EnQueue(&queue, &node->lchild);
-            EnQueue(&queue, &node->rchild);
+            EnQueue(&queue, node->lchild);
+            EnQueue(&queue, node->rchild);
         } else {
             while (!QueueEmpty(&queue)) {
                 DeQueue(&queue, &node);

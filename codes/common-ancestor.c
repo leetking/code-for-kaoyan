@@ -13,7 +13,7 @@ bool GetAllAncestors(BiTree tree, BiTree node, BiTree *ancestorArr, int *arrLen)
     if (tree == node
             || GetAllAncestors(tree->lchild, node, ancestorArr, arrLen)
             || GetAllAncestors(tree->rchild, node, ancestorArr, arrLen)) {
-        ancestorArr[*arrLen] = node;
+        ancestorArr[*arrLen] = tree;
         (*arrLen) += 1;
     }
     return false;
@@ -32,13 +32,13 @@ BiTree CommonAncestor(BiTree tree, BiTree p, BiTree q)
     if (!GetAllAncestors(tree, q, qAncestors, &qLen))
         return NULL;
 
-    while (pAncestors[pLen] == qAncestors[qLen]) {
-        pLen -= 1;
-        qLen -= 1;
-    }
+    do {
+        pLen --;
+        qLen --;
+    } while (pAncestors[pLen] == qAncestors[qLen]);
     /**
      * 循环结束，此时 pAncestors[pLen] != qAncestors[qLen]
-     * 确有， pAncestors[pLen+1] == qAncestors[qLen+1]
+     * 却有， pAncestors[pLen+1] == qAncestors[qLen+1]
      */
 
     return pAncestors[pLen+1];

@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
+BASE_NAME="code-of-datastruct-and-algorithm"
+OUTPUT_FILE="$BASE_NAME.pdf"
 RELEASE_DIR="./release"
-OUTPUT_FILE="code-of-datastruct-and-algorithm.pdf"
 
 clean() {
     latexmk -c
-    rm -rf _minted-code-of-data-struct-and-algorithm/
+    rm -rf "_minted-$BASE_NAME"
 }
 
 build() {
-    latexmk
-    mv "$OUTPUT_FILE" "$RELEASE_DIR"
+    # need double compiling
+    latexmk     # generate contents
+    latexmk     # generate table of contents
+    cp "$OUTPUT_FILE" "$RELEASE_DIR"
 }
 
 print_usage() {

@@ -5,7 +5,6 @@
 void DeleteValuesBetweenLoHiFromList(LinkList list, int lo, int hi)
 {
     if (NULL == list || NULL == list->next || lo > hi) return;
-    LinkList next;
     while (NULL != list->next) {
         LinkList curr = list->next;
         if (lo <= curr->data && curr->data <= hi) {

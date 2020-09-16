@@ -35,7 +35,7 @@
 
 \subsection{数据结构定义}
 \subsubsection{顺序表}
-\paragraph{静态分配} 静态分配是指初始化链表时内部不需要 \mintinline{c}{malloc} 函数动态分配空间。其结构定义如下：
+\paragraph{静态分配} 静态分配是指初始化链表时内部不需要来自头文件 \mintinline{c}{<stdlib.h>} 的 \mintinline{c}{malloc} 或 \mintinline{c}{calloc} 函数动态分配空间。其结构定义如下：
 \begin{minted}{c}
 #define MaxSize 1024
 typedef struct SeqList {
@@ -54,151 +54,73 @@ typedef struct SeqList {
 
 \paragraph{基本操作}
 \begin{enumerate}
-\item 初始化 \mintinline{c}{bool InitList(SeqList *list, int capacity);} 成功返回 \mintinline{c}{true}，失败返回 \mintinline{c}{false}
-\begin{minted}{c}
-/**
- * bool 在 C99 以标准类型添加到 C 语言中，来自头文件 <stdbool.h>
- */
-bool InitList(SeqList *list, int capacity)
-{
-    if (NULL == list || capacity <= 0) return false;
+    \item 初始化顺序表 \mintinline{c}{bool InitList(SeqList *list, int capacity);} 成功返回 \mintinline{c}{true}，失败返回 \mintinline{c}{false}. 注意：下面没有使用 \mintinline{c}{list->data = (int *)malloc(capacity * sizeof(int))} 风格 ，即强制转换 \mintinline{c}{malloc} 返回值类型为 \mintinline{c}{int *} 类型，原因参见 \footnote{\url{https://stackoverflow.com/questions/605845/do-i-cast-the-result-of-malloc}}。
+        \inputminted{c}{codes/init-static-list.c}
+        如果是静态分配的顺序表，初始化函数可以按照如下定义：
+        \begin{minted}{c}
+        bool InitList(SeqList *list)
+        {
+            if (NULL == list) return false;
+            list->length = 0;
+            return true;
+        }
+        \end{minted}
 
-    /**
-     * 注意：这里没有使用
-     * list->data = (int *)malloc(capacity * sizeof(int));
-     * 风格，强制转换指针为 int * 类型，原因见下面链接
-     * https://stackoverflow.com/questions/605845/do-i-cast-the-result-of-malloc
-     */
-    list->data = malloc(capacity * sizeof(int));
-    if (NULL == list->data) return false;
+    \item 销毁顺序表 \mintinline{c}{void DestroyList(SeqList *list);} 对于静态顺序表，可以没有销毁操作，或者简单地把 \mintinline{c}{list->length} 置为 0 即可
+        \begin{minted}{c}
+        void DestroyList(SeqList *list)
+        {
+            free(list->data);
+        }
+        \end{minted}
 
-    list->length = 0;
-    list->capacity = capacity;
-    return true;
-}
+    \item 求顺序表长度 \mintinline{c}{int ListLength(SeqList *list);}
+        \begin{minted}{c}
+        int ListLength(SeqList *list)
+        {
+            if (NULL == list) return 0;
+            return list->length;
+        }
+        \end{minted}
 
-/* 如果是静态分配的顺序表，初始化函数可以按照如下定义 */
-bool InitList(SeqList *list)
-{
-    if (NULL == list) return false;
-    list->length = 0;
-    return true;
-}
-\end{minted}
+    \item 获取顺序表容量 \mintinline{c}{int ListCapacity(SeqList *list);}
+        \begin{minted}{c}
+        int ListCapacity(SeqList *list)
+        {
+            if (NULL == list) return 0;
+            return list->capacity;
+            /* 对于静态顺序表 */
+            //return MaxSize;
+        }
+        \end{minted}
 
-\item 销毁列表 \mintinline{c}{void DestroyList(SeqList *list);} 对于静态顺序表，可以没有销毁操作，或者简单地把 \mintinline{c}{list->length} 置为 0 即可
-\begin{minted}{c}
-void DestroyList(SeqList *list)
-{
-    free(list->data);
-}
-\end{minted}
+    \item 顺序表是否为空 \mintinline{c}{bool ListEmpty(SeqList *list);}
+        \begin{minted}{c}
+        bool ListEmpty(SeqList *list)
+        {
+            return (0 == list->length);
+        }
+        \end{minted}
 
-\item 求顺序表长度 \mintinline{c}{int ListLength(SeqList *list);}
-\begin{minted}{c}
-int ListLength(SeqList *list)
-{
-    if (NULL == list) return 0;
-    return list->length;
-}
-\end{minted}
+    \item 顺序表是否已满 \mintinline{c}{bool ListFull(SeqList *list);}
+        \begin{minted}{c}
+        bool ListFull(SeqList *list)
+        {
+            return (ListLength(list) == ListCapacity(list));
+        }
+        \end{minted}
 
-\item 获取顺序表容量 \mintinline{c}{int ListCapacity(SeqList *list);}
-\begin{minted}{c}
-int ListCapacity(SeqList *list)
-{
-    if (NULL == list) return 0;
-    return list->capacity;
-    /* 对于静态顺序表 */
-    // return MaxSize;
-}
-\end{minted}
+    \item 查找某个元素的下标 \mintinline{c}{int LocateElem(SeqList *list, int ele);}
+        \inputminted{c}{codes/locate-element-in-static-list.c}
 
-\item 顺序表是否为空 \mintinline{c}{bool ListEmpty(SeqList *list);}
-\begin{minted}{c}
-bool ListEmpty(SeqList *list)
-{
-    return (0 == list->length);
-}
-\end{minted}
+    \item 根据下标获取元素 \mintinline{c}{int GetElem(SeqList *list, int idx);}
+        \inputminted{c}{codes/get-element-from-static-list.c}
 
-\item 顺序表是否已满 \mintinline{c}{bool ListFull(SeqList *list);}
-\begin{minted}{c}
-bool ListFull(SeqList *list)
-{
-    return (ListLength(list) == ListCapacity(list));
-}
-\end{minted}
+    \item 在指定下标处插入元素 \mintinline{c}{bool ListInsert(SeqList *list, int idx, int ele);}
+        \inputminted{c}{codes/static-list-insert.c}
 
-\item 查找某个元素的下标 \mintinline{c}{int LocateElem(SeqList *list, int ele);}
-\begin{minted}{c}
-/**
- * 返回 -1 表明没有找到或者出错
- */
-int LocateElem(SeqList *list, int ele)
-{
-    if (NULL == list) return -1;
-    for (int i = 0; i < Length(list); i++) {
-        if (ele == list->data[i])
-            return i;
-        /* 对于静态顺序表 */
-        //if (ele == list.data[i])
-        //    return i;
-    }
-    /* 没有找到 */
-    return -1;
-}
-\end{minted}
-
-\item 根据下标获取元素 \mintinline{c}{int GetElem(SeqList *list, int idx);}
-\begin{minted}{c}
-int GetElem(SeqList *list, int idx)
-{
-    /* 假定元素都是大于 0，返回 -1 表明发生下标越界错误
-     * 如果存储的元素是任意整数，那么返回 -1 就不合理，可以修改 GetElem 函数为
-     * bool GetElem(SeqList *list, int idx, int *store);
-     * 返回 ture，表明正确获取数据，存储到指针 *store 里，
-     * 返回 false，表明下标越界
-     */
-    if (idx < 0 || idx > ListLength(list))
-        return -1;
-    return list->data[idx];
-    /* 对于静态顺序表 */
-    //return list.data[idx];
-}
-\end{minted}
-
-\item 在指定下标处插入元素 \mintinline{c}{bool ListInsert(SeqList *list, int idx, int ele);}
-\begin{minted}{c}
-bool ListInsert(SeqList *list, int idx, int ele)
-{
-    if (idx < 0 || idx > ListLength(list)) return false;
-    /* 存储空间已满 */
-    if (ListFull(list)) return false;
-    for (int i = Length(list); i > idx; i--) {
-        list->data[i] = list->data[i-1];
-        /* 对于静态顺序表 */
-        // list.data[i] = list.data[i-1];
-    }
-    list->data[idx] = ele;
-    return true;
-}
-\end{minted}
-
-\item 删除下标处的元素 \mintinline{c}{bool ListDelete(SeqList *list, int idx, int *ele);}
-\begin{minted}{c}
-bool ListDelete(SeqList *list, int idx, int *ele)
-{
-    if (idx < 0 || idx > ListLength(list)) return false;
-    for (int i = idx; i < ListLength(list)-1; i++) {
-        list->data[i] = list->data[i+1];
-        /* 对于静态顺序表 */
-        // list.data[i] = list.data[i+1];
-    }
-    list->length = list->length-1;
-    return true;
-}
-\end{minted}
+    \item 删除下标处的元素 \mintinline{c}{bool ListDelete(SeqList *list, int idx, int *ele);}
+        \inputminted{c}{codes/static-list-delete.c}
 \end{enumerate}
 
 \subsubsection{单链表}
@@ -216,54 +138,22 @@ node->next = NULL;
 
 \paragraph{基本操作}
 \begin{enumerate}
-\item 初始化一个单链表 \mintinline{c}{bool InitList(LinkList *list);}
-\begin{minted}{c}
-/**
- * 带头节点的初始化
- * LinkList 实际上是指向 LinkNode 类型的指针
- * 所以 list 指针也就是一个指向 LinkNode 类型的 “二级指针”，
- * 也就是所谓的指向指针的指针， list 指向 LinkList 类型的指针
- */
-bool InitList(LinkList *list)
-{
-    if (NULL == list) return false;
-    *list = malloc(sizeof(LinkNode));
-    (*list)->next = NULL;
-    return true;
-}
+    \item 初始化一个单链表 \mintinline{c}{bool InitList(LinkList *list);}
+        单链表常常有两种组织方式，带有头节点和不带头节点。带有头节点的单链表很多操作可以方便一下，不带头节点的单链表虽然也可以向带有头节点的一样，但是要稍稍繁琐一点。
+        \begin{itemize}
+            \item 带头节点的单链表初始化
+                \inputminted{c}{codes/init-link-list-with-dummy-node.c}
+            \item 不带头节点的单链表初始化
+                \inputminted{c}{codes/init-link-list-without-dummy-node.c}
+        \end{itemize}
 
-/**
- * 不带头结点的单链表初始化
- */
- bool InitList(LinkList *list)
- {
-    if (NULL == list) return false;
-    *list = NULL;
-    return true;
- }
- /* 对于不带头节点的单链表可以不使用函数来初始化链表，而是按照如下方式 */
- LinkList list = NULL;     /* 因为无头节点，可以直接以空指针当作空链表 */
-\end{minted}
-
-\item 释放一个单链表 \mintinline{c}{void DestroyList(LinkList list);}
-\begin{minted}{c}
-/**
- * 无论有没有头节点，释放方法都一样
- */
- void DestroyList(LinkList list)
- {
-    LinkList next;
-    for (; NULL != list; list = next) {
-        next = list->next;
-        free(list);
-    }
-}
-\end{minted}
+    \item 销毁单链表，释放节点占据的空间 \mintinline{c}{void DestroyList(LinkList list);}
+        \inputminted{c}{codes/destroy-link-list.c}
 
 \end{enumerate}
 
 \subsubsection{双链表}
-双链表不像单链表有带头节点和不带头节点之分，因为不带头节点处理链表通常会繁琐一些，双链表插入删除涉及的指针数量是单链表的两倍，所以双链表实际中一般都是带有头节点。此外，双链表有普通的双链表和循环双链表两种实现。
+双链表不像单链表有带头节点和不带头节点之分，因为不带头节点处理链表通常更繁琐一些，双链表插入删除涉及的指针数量是单链表的两倍，所以双链表实际中一般都是带有头节点。此外，双链表有普通的双链表和循环双链表两种实现。
 \begin{minted}{c}
 typedef struct DLinkNode {
     int data;
@@ -274,113 +164,75 @@ typedef DLinkNode *DLinkList;
 
 \paragraph{基本操作} 这里以\emph{循环双链}表为主要例子作为演示，同时注释里会注明普通双链表的实现。
 \begin{enumerate}
-\item 初始化双链表 \mintinline{c}{bool InitDLinkList(DLinkList *dlist);}
-\begin{minted}{c}
-bool InitDLinkList(DLinkList *dlist)
-{
-    if (NULL == dlist) return false;
-    *dlist = malloc(sizeof(DLinkNode));
-    if (NULL == *dlist) return false;
-    /* 循环双链表 */
-    (*dlist)->prev = (*dlist)->next = *dlist;
-    /* 普通双链表 */
-    // (*dlist)->prev = (*dlist)->next = NULL;
-    return true;
-}
-/* 使用初始化函数 */
-DLinkList list;
-InitDLinkList(&list);
-\end{minted}
+    \item 初始化双链表 \mintinline{c}{bool InitDLinkList(DLinkList *dlist);}
+        \inputminted{c}{codes/init-double-link-list.c}
+        按照如下方式定义双链表并初始化：
+        \begin{minted}{c}
+        DLinkList list;         /* 定义双链表 list */
+        InitDLinkList(&list);   /* 初始化双链表 list */
+        \end{minted}
 
-\item 判断是否是空链表 \mintinline{c}{bool DLinkListEmpty(DLinkList list);}
-\begin{minted}{c}
-bool DLinkListEmpty(DLinkList list)
-{
-    if (NULL == list) return true;
-    return (list->next = list) && (list->prev = list);
-    /* 普通双链表 */
-    // return (list->next == NULL) && (list->prev == NULL);
-}
-\end{minted}
+    \item 判断是否是空链表 \mintinline{c}{bool DLinkListEmpty(DLinkList list);}
+        \begin{minted}{c}
+        bool DLinkListEmpty(DLinkList list)
+        {
+            if (NULL == list) return true;
+            return (list->next = list) && (list->prev = list);
+            /* 普通双链表 */
+            //return (list->next == NULL) && (list->prev == NULL);
+        }
+        \end{minted}
 
-\item 求表长度 \mintinline{c}{int DLinkListLength(DLinkList list);}
-\begin{minted}{c}
-int DLinkListLength(DLinkList list)
-{
-    if (NULL == list) return 0;
-    int len = 0;
-    /* 让 p = list->next 是为了去掉头节点 */
-    for (DLinkList p = list->next; list != p; p = p->next)
-        len++;
+    \item 求表长度 \mintinline{c}{int DLinkListLength(DLinkList list);}
+        \inputminted{c}{codes/length-of-double-link-list.c}
 
-    /* 普通双链表 */
-    //for (DLinkList p = list->next; NULL != p; p = p->next)
-    //    len++;
+    \item 在双链表指定\emph{节点后}插入元素 \mintinline{c}{bool InsertDLinkListAt(DLinkList at, int ele);}
+        \begin{itemize}
+            \item 在循环双链表中插入元素
+                \inputminted{c}{codes/insert-double-cycle-link-at.c}
+            \item 在非循环双链表中插入元素
+                \inputminted{c}{codes/insert-double-link-at.c}
+        \end{itemize}
 
-    return len;
-}
-\end{minted}
+    \item 删除双链表中指定节点 \mintinline{c}{bool DeleteDLinkList(DLinkList node);}
+        \begin{itemize}
+            \item 从循环双链表中删除元素
+                \inputminted{c}{codes/delete-in-double-cycle-link-list.c}
+            \item 从非循环双链表中删除元素
+                \inputminted{c}{codes/delete-in-double-link-list.c}
+        \end{itemize}
 
-\item 在双链表指定\emph{节点后}插入元素 \mintinline{c}{bool InsertDLinkListAt(DLinkList at, int ele);}
-\begin{minted}{c}
-/**
- * 插入元素 ele 到插入点 at 之后
- */
-bool InsertDLinkListAt(DLinkList at, int ele)
-{
-    if (NULL == at) return false;
-    DLinkNode *node = malloc(sizeof(DLinkNode));
-    if (NULL == node) return false;
-    node->data = ele;
-
-    DLinkList next = at->next;
-    node->next = next;
-    node->prev = at;
-    next->prev = node;
-    at->next = node;
-    return true;
-}
-\end{minted}
-
-\item 删除双链表指定节点 \mintinline{c}{bool DeleteDLinkList(DLinkList node);}
-\begin{minted}{c}
-bool DeleteDLinkList(DLinkList node)
-{
-    if (NULL == node) return false;
-    DLinkList prev = node->prev;
-    DLinkList next = node->next;
-    prev->next = next;
-    next->prev = prev;
-    free(node);
-    return true;
-}
-\end{minted}
 \end{enumerate}
 
 \subsubsection{静态链表}
-静态链表（或者叫「游标」的技术）在 C 语言中使用的比较少，但是对于没有指针概念的编程语言中使用会使用。与之类似的技术在 C 语言中使用较多，叫「池」的技术。比如链表节点池：为了减少 \mintinline{c}{malloc} 函数的调用以提高效率，预先分配一大块内存，自己在这块内存中分配各个节点。指向这些节点的时候可以不使用指针，而是使用节点在这一大块内存中的编号。
+静态链表（或者叫「游标」的技术）在 C 语言中使用的比较少，但是对于没有指针概念的编程语言中使用会使用。与之类似且在 C 语言中使用较多的技术，叫「池」。比如链表节点池：为了减少 \mintinline{c}{malloc} 函数的调用以提高效率，预先分配一大块内存，自己在这块内存中分配各个节点。指向这些节点的时候可以不使用指针，而是使用节点在这一大块节点池中的编号。
 
 \subsection{例题}
 \begin{enumerate}
     \item 删除不带头结点单链表 \mintinline{c}{list} 中所有值为 \mintinline{c}{x} 的结点
         \inputminted{c}{codes/delete-all-x-from-list.c}
 
-    \item 删除带头结点单链表 \mintinline{c}{list} 中所有值为 \mintinline{c}{x} 结点
+    \item 删除\emph{带头结点}单链表 \mintinline{c}{list} 中所有值为 \mintinline{c}{x} 结点
         \inputminted{c}{codes/delete-all-x-from-list2.c}
 
-    \item 反向输出带有头结点单链表 \mintinline{c}{list} 中的所有值
-        \inputminted{c}{codes/print-a-list-revsersely.c}
+    \item 反向输出\emph{带有头结点}单链表 \mintinline{c}{list} 中的所有值
+        \begin{itemize}
+            \item 方法一：函数递归输出，由于链表长度可以很长，所以存在栈溢出的问题
+                \inputminted{c}{codes/print-list-revsersely1.c}
+            \item 方法二：用一个数组暂存元素然后逆向输出（就是后面会讲到的栈的思想）
+                \inputminted{c}{codes/print-list-revsersely2.c}
+        \end{itemize}
 
-    \item 删除带头结点单链表 \mintinline{c}{list} 中最小值的节点
+    \item 删除\emph{带头结点}单链表 \mintinline{c}{list} 中最小值的节点
         \inputminted{c}{codes/delete-minimal-value-from-list.c}
 
-    \item 就地逆置带头结点单链表 \mintinline{c}{list}
+    \item 就地逆置\emph{带头结点}单链表 \mintinline{c}{list}
         \inputminted{c}{codes/reverse-list-in-place.c}
 
-    \item 排序带头结点的单链表 \mintinline{c}{list} 为升序
+    \item 排序\emph{带头结点}单链表 \mintinline{c}{list} 为升序
         \inputminted{c}{codes/sort-list.c}
 
-    \item 删除带有头结点单链表 \mintinline{c}{list} 中介于给定的两个值 \mintinline{c}{lo}, \mintinline{c}{hi} （大于等于 \mintinline{c}{lo}，小于等于 \mintinline{c}{hi}）中的元素
+    \item 删除\emph{带头结点}单链表 \mintinline{c}{list} 中介于给定的两个值 \mintinline{c}{lo}, \mintinline{c}{hi} （大于等于 \mintinline{c}{lo}，小于等于 \mintinline{c}{hi}）中的元素
         \inputminted{c}{codes/delete-values-between-lo-hi-from-list.c}
 \end{enumerate}
 
@@ -410,17 +262,7 @@ typedef struct SeqStack {
 \paragraph{基本操作}
 \begin{enumerate}
     \item 以最大容量 \mintinline{c}{capacity} 初始化栈 \mintinline{c}{bool InitStack(SeqStack *stack, int capacity);}
-        \begin{minted}{c}
-        bool InitStack(SeqStack *stack, int capacity)
-        {
-            if (NULL == stack || capacity <= 0) return false;
-            stack->top = -1;
-            stack->capacity = capacity;
-            stack->data = malloc(capacity * sizeof(int));
-            if (NULL == stack->data) return false;
-            return true;
-        }
-        \end{minted}
+        \inputminted{c}{codes/init-sequence-stack.c}
 
     \item 销毁栈 \mintinline{c}{void DestroyStack(SeqStack *stack);} 和销毁动态分配的顺序表类似，就不再赘述
 
@@ -440,7 +282,7 @@ typedef struct SeqStack {
             if (NULL == stack) return 0;
             return stack->capacity;
             /* 对于静态分配的栈 */
-            // return MaxSize;
+            //return MaxSize;
         }
         \end{minted}
 
@@ -451,7 +293,7 @@ typedef struct SeqStack {
             if (NULL == stack) return true;
             return (0 == StackSize(stack));
             /* 或者 */
-            // return  (-1 == stack->top);
+            //return  (-1 == stack->top);
         }
         \end{minted}
 
@@ -462,7 +304,7 @@ typedef struct SeqStack {
             if (NULL == stack) return false;
             return (StackSize(stack) == StackCapacity(stack));
             /* 或者 */
-            // return (stack->top +1 == stack->capacity);
+            //return (stack->top +1 == stack->capacity);
         }
         \end{minted}
 
@@ -512,57 +354,30 @@ typedef struct LinkStack {
 
 \paragraph{基本操作}
 \begin{enumerate}
-\item 初始化栈 \mintinline{c}{bool InitStack(LinkStack *stack);}
-\begin{minted}{c}
-bool InitStack(LinkStack *stack)
-{
-    if (NULL === stack) return false;
-    stack->size = 0;
-    stack->top = NULL;  /* 不带头节点的单链表 */
-    return true;
-}
-\end{minted}
+    \item 初始化栈 \mintinline{c}{bool InitStack(LinkStack *stack);}
+        \begin{minted}{c}
+        bool InitStack(LinkStack *stack)
+        {
+            if (NULL === stack) return false;
+            stack->size = 0;
+            stack->top = NULL;  /* 不带头节点的单链表 */
+            return true;
+        }
+        \end{minted}
 
-\item 获取栈内元素个数、判断栈是否为空等函数不再赘述
+    \item 获取栈内元素个数、判断栈是否为空等函数不再赘述
 
-\item 进栈 \mintinline{c}{bool Push(LinkStack *stack, int ele);}
-\begin{minted}{c}
-bool Push(LinkStack *stack, int ele)
-{
-    if (NULL == stack) return false;
-    /* 链表实现的栈的容量为无穷大，所以不存在栈满的情况 */
-    LinkNode *node = malloc(sizeof(LinkNode));
-    if (NULL == node) return false;
-    node->data = ele;
+    \item 进栈 \mintinline{c}{bool Push(LinkStack *stack, int ele);}
+        \inputminted{c}{codes/push-into-link-stack.c}
 
-    node->next = stack->top;
-    stack->top = node;
+    \item 出栈 \mintinline{c}{bool Pop(LinkStack *stack, int *store);}
+        \inputminted{c}{codes/pop-from-link-stack.c}
 
-    stack->size += 1;
-    return true;
-}
-\end{minted}
-
-\item 出栈 \mintinline{c}{bool Pop(LinkStack *stack, int *store);}
-\begin{minted}{c}
-bool Pop(LinkStack *stack, int *store)
-{
-    if (NULL == stack || NULL == store) return false;
-    if (Empty(stack)) return false;
-    LinkList node = stack->top;
-    stack->top = node->next;
-
-    *store = node->data;
-    free(node);
-    return true;
-}
-\end{minted}
-
-\item 获取栈顶元素 \mintinline{c}{int GetElem(LinkStack *stack);} 无须再给出吧
+    \item 获取栈顶元素 \mintinline{c}{int GetElem(LinkStack *stack);} 无须再给出吧
 \end{enumerate}
 
 \subsection{例题}
-栈的应用更多是在数和图里面作为辅助数据结构使用，所以单独考察变体不多。这里以判断括号是否匹配为例子，演示栈数据结构的使用。
+栈的应用更多是在数和图里面作为辅助数据结构使用，所以单独考察变体不多。这里以判断括号是否匹配为例子，演示栈数据结构的使用。注意，这里栈内存储元素类型为 \mintinline{c}{char}，而不是前文示例所讲的元素类型 \mintinline{c}{int}，也就是说下面函数中的栈需要做适当的修改。\label{is-brackets-valid}
 \inputminted{c}{codes/is-brackets-valid.c}
 
 
@@ -583,86 +398,76 @@ typedef struct SeqQueue {
 
 \paragraph{基本操作}
 \begin{enumerate}
-\item 初始化队列 \mintinline{c}{bool InitQueue(SeqQueue *queue, int capacity);}
-\begin{minted}{c}
-bool InitQueue(SeqQueue *queue, int capacity)
-{
-    if (NULL == queue || capacity <= 0) return false;
-    queue->data = malloc(capacity * sizeof(int));
-    if (NULL == queue->data) return false;
-    queue->capacity = capacity;
-    queue->front = queue->rear = 0;
-    // queue->size = 0;
-    return true;
-}
-\end{minted}
+    \item 初始化队列 \mintinline{c}{bool InitQueue(SeqQueue *queue, int capacity);}
+        \inputminted{c}{codes/init-sequence-queue.c}
 
-\item 判断队列是否为空 \mintinline{c}{bool QueueEmpty(SeqQueue *queue);}
-\begin{minted}{c}
-bool QueueEmpty(SeqQueue *queue)
-{
-    if (NULL == queue) return true;
-    return (queue->front == queue->rear);
-    /* 如果采用 size 记录存储元素的个数 */
-    // return (0 == queue->size);
-}
-\end{minted}
+    \item 判断队列是否为空 \mintinline{c}{bool QueueEmpty(SeqQueue *queue);}
+        \begin{minted}{c}
+        bool QueueEmpty(SeqQueue *queue)
+        {
+            if (NULL == queue) return true;
+            return (queue->front == queue->rear);
+            /* 如果采用 size 记录存储元素的个数 */
+            //return (0 == queue->size);
+        }
+        \end{minted}
 
-\item 判断队列是否为满 \mintinline{c}{bool QueueFull(SeqQueue *queue);}
-\begin{minted}{c}
-bool QueueFull(SeqQueue *queue)
-{
-    if (NULL == queue) return false;
-    return (queue->front == (queue->rear+1) % queue->capacity);
-    // return (queue->capacity == queue->size);
-}
-\end{minted}
+    \item 判断队列是否为满 \mintinline{c}{bool QueueFull(SeqQueue *queue);}
+        \begin{minted}{c}
+        bool QueueFull(SeqQueue *queue)
+        {
+            if (NULL == queue) return false;
+            return (queue->front == (queue->rear+1) % queue->capacity);
+            //return (queue->capacity == queue->size);
+        }
+        \end{minted}
 
-\item 获取队列当前元素个数 \mintinline{c}{int QueueSize(SeqQueue *queue);}
-\begin{minted}{c}
-int QueueSize(SeqQueue *queue)
-{
-    if (NULL == queue) return 0;
-    return (queue->rear - queue->front + queue->capacity) % queue->capacity;
-    // return queue->size;
-}
-\end{minted}
+    \item 获取队列当前元素个数 \mintinline{c}{int QueueSize(SeqQueue *queue);}
+        \begin{minted}{c}
+        int QueueSize(SeqQueue *queue)
+        {
+            if (NULL == queue) return 0;
+            return (queue->rear - queue->front + queue->capacity) % queue->capacity;
+            //return queue->size;
+        }
+        \end{minted}
 
-\item 入队 \mintinline{c}{bool EnQueue(SeqQueue *queue, int ele);}
-\begin{minted}{c}
-bool EnQueue(SeqQueue *queue, int ele)
-{
-    if (NULL == queue || QueueFull(queue)) return false;
-    queue->data[queue->rear] = ele;
-    queue->rear = (queue->rear+1) % queue->capacity;
-    // queue->size += 1;
-    return true;
-}
-\end{minted}
+    \item 入队 \mintinline{c}{bool EnQueue(SeqQueue *queue, int ele);}
+        \begin{minted}{c}
+        bool EnQueue(SeqQueue *queue, int ele)
+        {
+            if (NULL == queue || QueueFull(queue)) return false;
+            queue->data[queue->rear] = ele;
+            queue->rear = (queue->rear+1) % queue->capacity;
+            //queue->size += 1;
+            return true;
+        }
+        \end{minted}
 
-\item 出队 \mintinline{c}{bool DeQueue(SeqQueue *queue, int *store);}
-\begin{minted}{c}
-bool DeQueue(SeqQueue *queue, int *store)
-{
-    if (NULL == queue || NULL == store) return false;
-    if (QueueEmpty(queue)) return false;
-    *store = queue->data[queue->front];
-    queue->front = (queue->front+1) % queue->capacity;
-    // queue->size -= 1;
-    return true;
-}
-\end{minted}
+    \item 出队 \mintinline{c}{bool DeQueue(SeqQueue *queue, int *store);}
+        \begin{minted}{c}
+        bool DeQueue(SeqQueue *queue, int *store)
+        {
+            if (NULL == queue || NULL == store) return false;
+            if (QueueEmpty(queue)) return false;
+            *store = queue->data[queue->front];
+            queue->front = (queue->front+1) % queue->capacity;
+            //queue->size -= 1;
+            return true;
+        }
+        \end{minted}
 
-\item 获取队首元素 \mintinline{c}{bool GetHead(SeqQueue *queue, int *store);}
-\begin{minted}{c}
-bool GetHead(SeqQueue *queue, int *store)
-{
-    if (NULL == queue || NULL == store) return false;
-    if (QueueEmpty(queue)) return false;
-    *store = queue->data[queue->front];
-    return true;
-}
-\end{minted}
+    \item 获取队首元素 \mintinline{c}{bool GetHead(SeqQueue *queue, int *store);}
+        \begin{minted}{c}
+        bool GetHead(SeqQueue *queue, int *store)
+        {
+            if (NULL == queue || NULL == store) return false;
+            if (QueueEmpty(queue)) return false;
+            *store = queue->data[queue->front];
+            return true;
+        }
+        \end{minted}
+
 \end{enumerate}
 
 \subsubsection{链式存储的队列}
@@ -676,93 +481,37 @@ typedef struct LinkQueue {
 
 \paragraph{基本操作}
 \begin{enumerate}
-\item 初始化队列 \mintinline{c}{bool InitQueue(LinkQueue *queue);}
-\begin{minted}{c}
-bool InitQueue(LinkQueue *queue)
-{
-    if (NULL == queue) return false;
-    LinkNode *dummy = malloc(sizeof(LinkNode)); /* 头节点 */
-    if (NULL == dummy) return false;
-    dummy->next = NULL;
+    \item 初始化队列 \mintinline{c}{bool InitQueue(LinkQueue *queue);}
+        \inputminted{c}{codes/init-link-queue.c}
 
-    /**
-     * front->[dummy]->NULL
-     * rear ----^
-     */
-    queue->front = queue->rear = dummy;
-    queue->size = 0;
-    return true;
-}
-\end{minted}
+    \item 销毁队列 \mintinline{c}{void DestroyQueue(LinkQueue *queue);}
+        \begin{minted}{c}
+        void DestroyQueue(LinkQueue *queue)
+        {
+            if (NULL == queue) return;
+            DestroyList(queue->front);
+        }
+        \end{minted}
 
-\item 销毁队列 \mintinline{c}{void DestroyQueue(LinkQueue *queue);}
-\begin{minted}{c}
-void DestroyQueue(LinkQueue *queue)
-{
-    if (NULL == queue) return;
-    DestroyList(queue->front);
-}
-\end{minted}
+    \item 判断队列是否为空 \mintinline{c}{bool QueueEmpty(LinkQueue *queue);}
+        \begin{minted}{c}
+        bool QueueEmpty(LinkQueue *queue)
+        {
+            if (NULL == queue) return true;
+            return (queue->front == queue->rear);
+        }
+        \end{minted}
 
-\item 判断队列是否为空 \mintinline{c}{bool QueueEmpty(LinkQueue *queue);}
-\begin{minted}{c}
-bool QueueEmpty(LinkQueue *queue)
-{
-    if (NULL == queue) return true;
-    return (queue->front == queue->rear);
-}
-\end{minted}
+    \item 入队 \mintinline{c}{bool EnQueue(LinkQueue *queue, int ele);}
+        \inputminted{c}{codes/enqueue-link-queue.c}
 
-\item 入队 \mintinline{c}{bool EnQueue(LinkQueue *queue, int ele);}
-\begin{minted}{c}
-bool EnQueue(LinkQueue *queue, int ele)
-{
-    if (NULL == queue) return false;
-    LinkNode *node = malloc(sizeof(LinkNode));
-    if (NULL == node) return false;
-    node->data = ele;
-    node->next = NULL;
+    \item 出队 \mintinline{c}{bool DeQueue(LinkQueue *queue, int *store);}
+        \inputminted{c}{codes/dequeue-link-queue.c}
 
-    /**
-     * front->[dummy]->[node1]->...->[ele]->NULL
-     * rear ---------------------------^
-     */
-    queue->rear->next = node;
-    queue->rear = node;
-
-    queue->size += 1;
-    return true;
-}
-\end{minted}
-
-\item 出队 \mintinline{c}{bool DeQueue(LinkQueue *queue, int *store);}
-\begin{minted}{c}
-bool DeQueue(LinkQueue *queue, int *store)
-{
-    if (NULL == queue || NULL == store) return false;
-    if (QueueEmpty(queue)) return false;
-
-    /**
-     * front->[dummy]->[node2]->...->[noden]->NULL
-     * rear ---------------------------^
-     * node ->[node1]
-     */
-    LinkList node = queue->front->next;
-    queue->front->next = node->next;
-    /* 如果是最后一个元素 */
-    if (node == queue->rear)
-        queue->rear = queue->front;
-    queue->size -= 1;
-
-    *store = node->data;
-    free(node);
-    return true;
-}
-\end{minted}
 \end{enumerate}
 
 \subsection{例题}
-本章无例题:)
+后续章节树和图的遍历会大量使用队列和栈，所以这里不再单独练习。
 
 
 \section{树}
@@ -781,7 +530,6 @@ bool DeQueue(LinkQueue *queue, int *store)
     \begin{aligned}
     & (m-1)k + 2 \le n \le mk+1 \\
         \implies & m -1 + \frac{2}{k} \le \frac{n}{k} \le m+\frac{1}{k} \\
-        %\implies & m \le \frac{n}{k} + 1 - \frac{2}{k} \le m + 1 - \frac{1}{k} \\
         \implies & m+ \frac{1}{k} - 1 \le \frac{n-1}{k} \le m \\
         \implies & m \le \left\lceil \frac{n-1}{k} \right\rceil \le m \\
         \implies & m = \left\lceil \frac{n-1}{k} \right\rceil
@@ -816,7 +564,8 @@ typedef struct PTree {
 
 \paragraph{应用}
 \begin{enumerate}
-    \item 并查集 (Union Find Set)：顺序存储的树结构可以用于实现并查集，不同之处在于并查集不需要通过双亲节点找到孩子节点，因此可以更为灵活。注意：下列代码中空集定义为双亲元素为 -1，单元素集合定义为双亲元素为自身。
+    \item 并查集 (Union Find Set)：并查集使用来判断两个元素是否在同一个集合的数据结构。
+        顺序存储的树结构可以用于实现并查集，不同之处在于并查集不需要通过双亲节点找到孩子节点，因此可以更为灵活。注意：下列代码中空集定义为双亲元素为 -1，单元素集合定义为双亲元素为自身。
         \begin{itemize}
             \item 结构的定义
                 \begin{minted}{c}
@@ -827,19 +576,7 @@ typedef struct PTree {
                 \end{minted}
 
             \item 初始化并查集 \mintinline{c}{bool InitUFSet(UFSet *set, int capacity);}
-                \begin{minted}{c}
-                bool InitUFSet(UFSet *set, int capacity)
-                {
-                    if (NULL == set || capacity <= 0) return false;
-                    set->nodes = malloc(capacity * sizeof(int));
-                    if (NULL == set->nodes) return false;
-                    set->capacity = capacity;
-                    /* 所有集合初始化为空集 */
-                    for (int i = 0; i < capacity; i++)
-                        set->nodes[i] = -1;
-                    return true;
-                }
-                \end{minted}
+                \inputminted{c}{codes/init-ufset.c}
 
             \item 销毁并查集 \mintinline{c}{void DestroyUFSet(UFSet *set);}
                 \begin{minted}{c}
@@ -864,23 +601,7 @@ typedef struct PTree {
                 \end{minted}
 
             \item 查找元素 \mintinline{c}{id} 所在集合的代表元素 \mintinline{c}{int Find(UFSet *set, int id);}
-                \begin{minted}{c}
-                /**
-                 * 返回 -1 表示 id 不在任何集合内
-                 * 返回 >= 0 表示 id 所在集合的代表元素
-                 */
-                int Find(UFSet *set,  int id)
-                {
-                    if (NULL == set) return -1;
-                    if (id < 0 || id >= set->capacity) return -1;
-                    while (true) {
-                        int parent = set->nodes[id];
-                        if (parent == id || parent == -1)
-                            return parent;
-                        id = parent;
-                    }
-                }
-                \end{minted}
+                \inputminted{c}{codes/ufset-find.c}
 
             \item 判断两个元素是否同一集合 \mintinline{c}{bool Same(UFSet *set, int x, int y);}
                 \begin{minted}{c}
@@ -894,26 +615,12 @@ typedef struct PTree {
                 }
                 \end{minted}
 
-            \item 合并 \mintinline{c}{x}  和 \mintinline{c}{y} 所在的集合 \mintinline{c}{bool Union(UFSet *set, int x, int y);}
-                \begin{minted}{c}
-                /**
-                 * 下面单纯的合并会导致查找 Find 效率降低，
-                 * 实际中会使用：按秩合并和路径压缩的方法
-                 * 参见：https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-                 */
-                 bool Union(UFSet *set, int x, int y)
-                 {
-                    int xparent = Find(set, x);
-                    int yparent = Find(set, y);
-                    if (-1 == xparent || -1 == yparent)
-                        return false;
-                    /* y 所在集合的代表元素 yparent 指向 x 集合代表元素 xparent */
-                    set->nodes[yparent] = xparent;
-                    return true;
-                 }
-                \end{minted}
+            \item 合并 \mintinline{c}{x} 和 \mintinline{c}{y} 所在的集合 \mintinline{c}{bool Union(UFSet *set, int x, int y);}
+                下面单纯的合并算法会导致查找函数 \mintinline{c}{Find} 效率降低，实际中有两种方法优化：按秩合并和路径压缩的方法。优化方法具体实现请参见\footnote{\url{https://en.wikipedia.org/wiki/Disjoint-set_data_structure}}。
+                \inputminted{c}{codes/ufset-union.c}
+
         \end{itemize}
-    \item 满二叉树
+    \item 存储满二叉树
     \item 大堆或小堆 % TODO 实现大堆和小堆
 \end{enumerate}
 
@@ -946,177 +653,80 @@ typedef struct BiTreeNode {
 } BiTreeNode;
 typedef BiTreeNode *BiTree;
 \end{minted}
+
 \paragraph{基本操作}
+\subparagraph{二叉树遍历}
 \begin{enumerate}
-    \item 二叉树遍历
+    \item 先序遍历 \mintinline{c}{void PreOrder(BiTree tree);}
         \begin{itemize}
-            \item 先序遍历 \mintinline{c}{void PreOrder(BiTree tree);}
+            \item 递归实现
                 \begin{minted}{c}
-                /* 递归实现 */
                 void PreOrder(BiTree tree)
                 {
                     if (NULL == tree) return;
                     /* 访问节点 tree */
-                    // visit(tree);
+                    //visit(tree);
                     PreOrder(tree->lchild);
                     PreOrder(tree->rchild);
                 }
+                \end{minted}
+            \item 非递归实现
+                \begin{itemize}
+                    \item[$\circ$] 版本一
+                        \inputminted{c}{codes/preorder-of-bitree-without-recursion1.c}
+                    \item[$\circ$] 版本二*
+                        \inputminted{c}{codes/preorder-of-bitree-without-recursion2.c}
+                \end{itemize}
+        \end{itemize}
 
-                /* 非递归实现：版本一 */
-                void PreOrder(BiTree tree)
-                {
-                #define TreeHeightMax 2048
-                    SeqStack stack;
-                    InitStack(&stack, TreeHeightMax);
-
-                    Push(&stack, &tree);
-                    while (!StackEmpty(&stack)) {
-                        BiTree node;
-                        Pop(&stack, &node);
-                        if (NULL == node)
-                            continue;
-                        /* 访问节点 node */
-                        // visit(node);
-                        /* 先右节点入栈，然后是左节点入栈 */
-                        Push(&stack, &node->rchild);
-                        Push(&stack, &node->lchild);
-                    }
-
-                    DestroyStack(&stack);
-                }
-
-                /* 非递归实现：版本二 */
-                void PreOrder(BiTree tree)
-                {
-                #define TreeHeightMax 2048
-                    SeqStack stack;
-                    InitStack(&stack, TreeHeightMax);
-
-                    BiTree curr = tree;
-                    while (NULL != curr || !StackEmpty(&stack)) {
-                        if (NULL != curr) {
-                            /* 访问当前节点 curr */
-                            // visit(curr);
-                            Push(&stack, &curr);
-                            curr = curr->lchild;
-                        } else {
-                            Pop(&stack, &curr);
-                            curr = curr->rchild;
-                        }
-                    }
-
-                    DestroyStack(&stack);
-                }
-            \end{minted}
-
-            \item 中序遍历 \mintinline{c}{void InOrder(BiTree tree);}
+    \item 中序遍历 \mintinline{c}{void InOrder(BiTree tree);}
+        \begin{itemize}
+            \item 递归实现
                 \begin{minted}{c}
-                /* 递归实现 */
                 void InOrder(BiTree tree)
                 {
                     if (NULL == tree) return;
                     InOrder(tree->lchild);
                     /* 访问节点 tree */
-                    // visit(tree);
+                    //visit(tree);
                     InOrder(tree->rchild);
-                }
-
-                /* 非递归实现 */
-                void InOrder(BiTree tree)
-                {
-                #define TreeHeightMax 2048
-                    SeqStack stack;
-                    InitStack(&stack, TreeHeightMax);
-
-                    BiTree curr = tree;
-                    while (NULL == curr || !StackEmpty(&stack)) {
-                        if (NULL != curr) {
-                            Push(&stack, &curr);
-                            curr = curr->lchild;
-                        } else {
-                            Pop(&stack, &curr);
-                            /* 访问节点 node */
-                            // visit(node);
-                            curr = curr->rchild;
-                        }
-                    }
-
-                    DestroyStack(&stack);
                 }
                 \end{minted}
 
-            \item 后序遍历 \mintinline{c}{void PostOrder(BiTree tree);}
+            \item 非递归实现
+                \inputminted{c}{codes/inorder-of-bitree-without-recursion.c}
+
+        \end{itemize}
+
+    \item 后序遍历 \mintinline{c}{void PostOrder(BiTree tree);}
+        \begin{itemize}
+            \item 递归实现
                 \begin{minted}{c}
-                /* 递归实现 */
                 void PostOrder(BiTree tree)
                 {
                     if (NULL == tree) return;
                     PostOrder(tree->lchild);
                     PostOrder(tree->rchild);
                     /* 访问节点 tree */
-                    // visit(tree);
-                }
-
-                /* 非递归实现 */
-                /* 参见 https://en.wikipedia.org/wiki/Tree_traversal#Post-order_(LRN) */
-                void PostOrder(BiTree tree)
-                {
-                #define TreeHeightMax 2048
-                    SeqStack stack;
-                    InitStack(&stack, TreeHeightMax);
-                    BiTree lastVisited = NULL;
-                    BiTree curr = tree;
-
-                    while (NULL != curr || !StackEmpty(&stack)) {
-                        if (NULL != curr) {
-                            Push(&stack, &curr);
-                            curr = curr->lchild;
-                        } else {
-                            GetTop(&stack, &curr);  /* 只获取栈顶，不弹栈 */
-                            if (NULL != curr->rchild && lastVisited != curr->rchild) {
-                                curr = curr->rchild;
-                            } else {
-                                /* 访问当前节点 */
-                                // visit(curr);
-                                Pop(&stack, &lastVisited);
-                            }
-                        }
-                    }
-
-                    DestroyStack(&stack);
+                    //visit(tree);
                 }
                 \end{minted}
-            \item 层次遍历 \mintinline{c}{void LevelOrder(BiTree tree);}
-                \begin{minted}{c}
-                void LevelOrder(BiTree tree)
-                {
-                #define TreeWidthMax 4096
-                    if (NULL == tree) return;
-                    SeqQueue queue;
-                    InitQueue(&queue, TreeNodesMax);
 
-                    EnQueue(&queue, &tree);
-                    while (!QueueEmpty(&queue)) {
-                        BiTree node;
-                        DeQueue(&queue, &node);
-                        /* 访问节点 */
-                        // visit(node);
-                        if (NULL != node->lchild)
-                            EnQueue(&queue, &node->lchild);
-                        if (NULL != node->rchild)
-                            EnQueue(&queue, &node->rchild);
-                    }
-
-                    DestroyQueue(&queue);
-                }
-                \end{minted}
+            \item 非递归实现 \footnote{\url{https://en.wikipedia.org/wiki/Tree_traversal\#Post-order_(LRN)}}
+                \inputminted{c}{codes/postorder-of-bitree-without-recursion.c}
         \end{itemize}
 
-    \item 二叉查找树 (Binary Search Tree, BST)，也叫排序二叉树或二叉排序树
+    \item 层次遍历 \mintinline{c}{void LevelOrder(BiTree tree);}
+        \inputminted{c}{codes/levelorder-of-bitree.c}
+
+\end{enumerate}
+
+\subparagraph{二叉查找树} 二叉查找树 (Binary Search Tree, BST)，也叫排序二叉树或二叉排序树
+\begin{enumerate}
+    \item 查找元素 \mintinline{c}{bool BiTreeSearch(BiTree tree, int data);}
         \begin{itemize}
-            \item 查找元素 \mintinline{c}{bool BiTreeSearch(BiTree tree, int data);}
+            \item 递归实现
                 \begin{minted}{c}
-                /* 递归实现 */
                 bool BiTreeSearch(BiTree tree, int data)
                 {
                     if (NULL == tree) return false;
@@ -1127,8 +737,10 @@ typedef BiTreeNode *BiTree;
                     else
                         return BiTreeSearch(tree->rchild, data);
                 }
+                \end{minted}
 
-                /* 非递归实现 */
+            \item 非递归实现
+                \begin{minted}{c}
                 bool BiTreeSearch(BiTree tree, int data)
                 {
                     while (NULL != tree) {
@@ -1144,30 +756,35 @@ typedef BiTreeNode *BiTree;
                 }
                 \end{minted}
 
-            \item 插入元素 \mintinline{c}{bool BiTreeInsert(BiTree *ptree, int data);}
-                \inputminted{c}{codes/bst-insert.c}
-
-            \item 二叉排序树构造 \mintinline{c}{BiTree CreateBSTree(int *array, int n);}
-                \begin{minted}{c}
-                BiTree CreateBSTree(int *array, int n)
-                {
-                    if (NULL == array || n <= 0) return NULL;
-
-                    BiTree tree = NULL;
-                    for (int i = 0; i < n; i++)
-                        BiTreeInsert(&tree, array[i]);
-
-                    return tree;
-                }
-                \end{minted}
-
-            \item 删除元素 \mintinline{c}{bool BiTreeDelete(BiTree *ptree, int data);}
-                \inputminted{c}{codes/bst-delete.c}
-
         \end{itemize}
 
-    \item 平衡二叉树 AVL-Tree，查找算法和二叉查找树一样，但是插入和删除算法不同而且代码实现较为复杂（比二叉查找树删除元素还要复杂），这里暂时不给出。
+    \item 插入元素 \mintinline{c}{bool BiTreeInsert(BiTree *ptree, int data);}
+        \inputminted{c}{codes/bst-insert.c}
+
+    \item 二叉排序树构造 \mintinline{c}{BiTree CreateBSTree(int *array, int n);}
+        \begin{minted}{c}
+        BiTree CreateBSTree(int *array, int n)
+        {
+            if (NULL == array || n <= 0) return NULL;
+
+            BiTree tree = NULL;
+            for (int i = 0; i < n; i++)
+                BiTreeInsert(&tree, array[i]);
+
+            return tree;
+        }
+        \end{minted}
+
+    \item 删除元素* \mintinline{c}{bool BiTreeDelete(BiTree *ptree, int data);}
+        \inputminted{c}{codes/bst-delete.c}
+
 \end{enumerate}
+
+\subparagraph{平衡二叉树} 平衡二叉树 AVL-Tree，查找算法和二叉查找树一样，但是插入和删除算法不同而且代码实现较为复杂（比二叉查找树删除元素还要复杂），这里暂时不给出。
+
+\paragraph{应用}
+\subparagraph{实现集合*}
+
 
 \subsubsection{线索二叉树}
 \begin{minted}{c}
@@ -1187,17 +804,17 @@ typedef struct ThreadTreeNode {
  */
  typedef ThreadTreeNode *ThreadTree;
 \end{minted}
-思想：任意一个节点有前驱节点且左孩子指针 \mintinline{c}{lchild} 没有指向左孩子，那么就指向此节点的前驱节点；任意一个节点有后继节点且右孩子指针 \mintinline{c}{rchild} 没有指向右孩子，那么就指向后继节点。
+线索化的思想：任意一个节点有前驱节点且左孩子指针 \mintinline{c}{lchild} 没有指向左孩子，那么就指向此节点的前驱节点；任意一个节点有后继节点且右孩子指针 \mintinline{c}{rchild} 没有指向右孩子，那么就指向后继节点。
 
 \paragraph{基本操作}
 \begin{enumerate}
-    \item 先序遍历线索化 \mintinline{c}{void CreatePreThreadTree(ThreadTree tree);}
+    \item 先序遍历线索化* \mintinline{c}{void CreatePreThreadTree(ThreadTree tree);}
         \inputminted{c}{codes/create-preorder-thread-tree.c}
 
-    \item 中序遍历线索化 \mintinline{c}{void CreateInThreadTree(ThreadTree tree);}
+    \item 中序遍历线索化* \mintinline{c}{void CreateInThreadTree(ThreadTree tree);}
         \inputminted{c}{codes/create-inorder-thread-tree.c}
 
-    \item 后序遍历线索化 \mintinline{c}{void CreatePostThreadTree(ThreadTree tree);}
+    \item 后序遍历线索化* \mintinline{c}{void CreatePostThreadTree(ThreadTree tree);}
         \inputminted{c}{codes/create-postorder-thread-tree.c}
 
     \item 先序遍历先序线索树 \mintinline{c}{void PreOrderOfPreThreadTree(ThreadTree tree);}
@@ -1241,7 +858,7 @@ typedef struct ThreadTreeNode {
     \item 按照从下往上、从右往左的方式遍历二叉树（逆层次遍历）
         \inputminted{c}{codes/re-level-order.c}
 
-    \item 通过先序序列和中序序列重构二叉树
+    \item 通过先序序列和中序序列重构二叉树*
         \inputminted{c}{codes/rebuild-bitree.c}
 
     \item 由满二叉树的先序序列求出其后序序列，也就是对顺序存储的满二叉树数组进行后续遍历
@@ -1256,7 +873,7 @@ typedef struct ThreadTreeNode {
     \item 删除二叉树所有值为 \mintinline{c}{x} 的\emph{子树}（不是节点）
         \inputminted{c}{codes/delete-all-subtree-x-from-bitree.c}
 
-    \item 删除二叉树（不是二叉排序树）所有值为 \mintinline{c}{x} 的\emph{节点}，由于不是二叉排序树，所以删除节点后的树不唯一，只需要保证是二叉树即可
+    \item 删除二叉树（不是二叉排序树）所有值为 \mintinline{c}{x} 的\emph{节点}*，由于不是二叉排序树，所以删除节点后的树不唯一，只需要保证是二叉树即可
         \inputminted{c}{codes/delete-all-x-from-bitree.c}
 
     \item 查找二叉树节点 \mintinline{c}{p} 和 \mintinline{c}{q} 的最近公共祖先
@@ -1269,6 +886,8 @@ typedef struct ThreadTreeNode {
         \inputminted{c}{codes/is-same-bitree.c}
 
     \item 在中序线索树查找给定节点在\emph{后序遍历序列}中的前驱节点
+
+        思想：若此节点有右子树，那么前驱就是右节点；若有左子树，那么就是左节点；如果左右子树都没有，那么节点左指针指向某一个祖先节点，如果双亲节点有左子树，那么前驱就是祖先节点的左节点，如果左节点没有则继续往上寻找，知道某一个祖先节点满足具有左子树，除非左子树为空指针，那么这个节点是后序遍历的第一个节点，没有前驱。
         \inputminted{c}{codes/find-previous-node-of-postorder-in-inthreadtree.c}
 
     \item 计算二叉树的带权路径长度 (Weighted Path Length, WPL)
@@ -1291,29 +910,267 @@ typedef struct ThreadTreeNode {
         \inputminted{c}{codes/max-and-min-value-in-bsttree.c}
 
     \item \emph{从大到小} 输出二叉排序树中大于等于 \mintinline{c}{lo} 小于等于 \mintinline{c}{hi} 的节点的值
-        \inputminted{c}{codes/print-from-hi-to-lo-in-bsttree.c}
+        \begin{itemize}
+            \item 版本一：遍历整棵树，根据判断是否输出节点值
+                \inputminted{c}{codes/print-from-hi-to-lo-in-bsttree1.c}
+            \item 版本二：仅仅遍历要输出的节点
+                \inputminted{c}{codes/print-from-hi-to-lo-in-bsttree2.c}
+        \end{itemize}
 
-    \item 以 $O(\log_2(n))$ 时间复杂度查找二叉树（假定二叉树树没有退化成链表）中序遍历序列中第 $k\ (1 \le k \le n)$ 个节点。二叉树节点中有附加域 \mintinline{c}{nodes} 表明当前子树的节点个数，比如空树没有节点，所以无法存储 \mintinline{c}{nodes}，就认为空树节点数为 0；只有一个节点的子树其根节点 \mintinline{c}{nodes} 为 1；其他树的根节点的 \mintinline{c}{nodes} 等于左右子树的 \mintinline{c}{nodes} 之和再加 1
+    \item 以 $O(\log_2(n))$ 时间复杂度查找二叉树（假定二叉树树没有退化成链表）中序遍历序列中第 $k\ (1 \le k \le n)$ 个节点。二叉树节点中有附加域 \mintinline{c}{nodes} 表明当前子树的节点个数，比如空树没有节点，所以无法存储 \mintinline{c}{nodes}，就认为空树节点数为 0；只有一个节点的子树其根节点 \mintinline{c}{nodes} 为 1；其他树的根节点的 \mintinline{c}{nodes} 等于左右子树的 \mintinline{c}{nodes} 之和再加 1 \label{find-kth-node-in-bitree}
         \inputminted{c}{codes/find-kth-node-in-bitree.c}
 
 \end{enumerate}
 
 
-\section{广义表}
+\section{广义表 *}
 \subsection{数据结构定义}
+广义表的字段 \mintinline{c}{isAtom} 用于表明此节点是一个\emph{原子}节点还是普通节点。当 \mintinline{c}{isAtom} 为真时，此节点为原子节点，此时 \mintinline{c}{left} 和 \mintinline{c}{right} 字段没有意义；同理，当 \mintinline{c}{isAtom} 为假时，此节点为普通节点 \mintinline{c}{data} 字段没有意义\footnote{在 C 语言中更常用联合体 \mintinline{c}{union} 来表示这种结构}。
+\begin{minted}{c}
+/* General List Node */
+typedef struct GListNode {
+    int data;
+    struct GListNode *left, *right;
+    bool isAtom;
+} GListNode;
+/* General List */
+typedef GListNode *GList;
+\end{minted}
+
+\paragraph{基本操作}
+\begin{enumerate}
+    \item 判断一个节点是不是原子 \mintinline{c}{bool IsAtom(GList list);}
+        \begin{minted}{c}
+        bool IsAtom(GList list)
+        {
+            /* 空列表不是原子 */
+            if (NULL == list) return false;
+            return list->isAtom;
+        }
+        \end{minted}
+
+    \item 判断一个节点是不是“节点对” (pair) \mintinline{c}{bool IsPair(GList list);}
+        \begin{minted}{c}
+        bool IsPair(GList list)
+        {
+            /* 空列表不是节点对 */
+            if (NULL == list) return false;
+            return !IsAtom(list);
+        }
+        \end{minted}
+
+    \item 判断一个列表是不是空列表 \mintinline{c}{bool IsNull(GList list);}
+        \begin{minted}{c}
+        bool IsNull(GList list)
+        {
+            return (NULL == list);
+        }
+        \end{minted}
+
+    \item 根据数据构建原子节点 \mintinline{c}{GList MakeAtom(int data);}
+        \begin{minted}{c}
+        GList MakeAtom(int data)
+        {
+            GList node = malloc(sizeof(GListNode));
+            if (NULL == node) return NULL;
+            node->data = data;
+            node->isAtom = true;
+            return node;
+        }
+        \end{minted}
+
+    \item 构建对 (pair) \mintinline{c}{GList MakePair(GList a, GList b);} 或者命名为 \mintinline{c}{GList cons(GList a, GList b);}。想知道为何是 \mintinline{c}{cons} 见 \footnote{\url{https://en.wikipedia.org/wiki/Lisp_(programming_language)\#Conses_and_lists}} \footnote{\url{https://en.wikipedia.org/wiki/Cons}}。
+        \begin{minted}{c}
+        GList MakePair(GList a, GList b)
+        {
+            GList node = malloc(sizeof(GListNode));
+            if (NULL == node) return NULL;
+            node->left = a;
+            node->right = b;
+            node->isAtom = false;
+            return node;
+        }
+        \end{minted}
+
+    \item 构建列表 \mintinline{c}{GList MakeList(int *arr, int len);}把数组中的元素构建成列表
+        \begin{minted}{c}
+        GList MakeList(int *arr, int len)
+        {
+            if (NULL == arr || len <= ) return NULL;    /* 空列表 */
+            GList list = NULL;
+            for (int i = len-1; i >= 0; i--)
+                list = MakePair(MakeAtom(arr[i]), list);
+            return list;
+        }
+        \end{minted}
+
+    \item 取表头 \mintinline{c}{GList GetHead(GList list);} 或者命名为 \mintinline{c}{GList car(GList list);}
+        \begin{minted}{c}
+        GList GetHead(GList list)
+        {
+            if (IsNull(list)) return NULL;  /* 空表表头还是空表 */
+            if (IsAtom(list)) return NULL;  /* 原子没法取“表头” */
+            return list->left;
+        }
+        \end{minted}
+
+    \item 取除去表头剩下的部分 \mintinline{c}{GList GetTail(GList list);} 或者命名为 \mintinline{c}{GList cdr(GList list);}
+        \begin{minted}{c}
+        GList GetTail(GList list)
+        {
+            if (IsNull(list)) return NULL;  /* 空表表尾还是空表 */
+            if (IsAtom(list)) return NULL;
+            return list->right;
+        }
+        \end{minted}
+
+
+    \item 判断是不是列表 \mintinline{c}{bool IsList(GList list);}
+        \begin{minted}{c}
+        bool IsList(GList list)
+        {
+            if (IsNull(list)) return true;  /* 空表 */
+            /* 顺着列表往后找到最后一个非原子节点 */
+            while (IsPair(list))
+                list = GetTail(list);
+            /* 这个非原子节点必须是空表，那么才是列表 */
+            return IsNull(list);
+        }
+        \end{minted}
+
+\end{enumerate}
 
 \subsection{例题}
+\begin{enumerate}
+    \item 构建广义列表 \verb|list = (A, (G, H, (M)), D)| \label{build-glist}
+        \begin{minted}{c}
+        GList listM = MakePair(MakeAtom('M'), NULL);    /* (M) */
+        GList listHM = MakePair(MakeAtom('H'), listM);  /* (H, (M)) */
+        GList listGHM = MakePair(MakeAtom('G'), listHM);/* (G, H, (M)) */
+        GList listD = MakePair(MakeAtom('D'), NULL);    /* (D) */
+        GList listGHMD = MakePair(listGHM, listD);      /* ((G, H, (M)), D) */
+        GList list = MakePair(MakeAtom('A'), listGHMD); /* (A, (G, H, (M)), D) */
+        \end{minted}
 
+    \item 在广义表 \verb|list = (A, B, (F, C), D)| 中获取 \verb|C|
+        \begin{minted}{c}
+        GetTail(list);                                     /* (B, (F, C), D) */
+        GetTail(GetTail(list));                            /* ((F, C), D) */
+        GetHead(GetTail(GetTail(list)));                   /* (F, C) */
+        GetTail(GetHead(GetTail(GetTail(list))));          /* (C) */
+        GetHead(GetTail(GetHead(GetTail(GetTail(list))))); /* C */
+        \end{minted}
+
+    \item 求广义表的深度，即 \mintinline{c}{left} 嵌套的深度，直观来说就是左括号 \verb|(| 的嵌套的最大深度。比如本章第~\ref{build-glist}~题表深度为 3
+        \begin{minted}{c}
+        int DepthOfGList(GList list)
+        {
+            if (IsNull(list) || IsAtom(list)) return 0;
+            int leftDepth = DepthOfGList(GetHead(list));
+            int rightDepth = DepthOfGList(GetTail(list));
+            return max(1 + leftDepth, rightDepth);
+        }
+        \end{minted}
+
+    \item 求广义表的长度，比如本章第~\ref{build-glist}~题表长度为 3
+        \begin{minted}{c}
+        int LengthOfGList(GList list)
+        {
+            if (!IsList(list)) return 0;
+            int len = 0;
+            while (!IsNull(list)) {
+                len ++;
+                list = GetTail(list);
+            }
+            return len;
+        }
+        \end{minted}
+
+\end{enumerate}
 
 
 \section{图}
 \subsection{数据结构定义}
 
+\paragraph{遍历}
+\begin{enumerate}
+    \item 深度优先遍历
+    \item 广度优先遍历
+\end{enumerate}
 
 \subsection{例题}
 
 
 \section{排序和查找}
+
+\subsection{排序}
+
+\subsubsection{插入排序}
+\inputminted{c}{codes/insert-sort.c}
+
+\subsubsection{折半插入排序}
+仅仅在查找元素的时候采用二分查找，但是移动元素开销不能避免，同时代码也会比简单的插入排序复杂一点点，所以不给出代码。
+
+\subsubsection{希尔排序*}
+希尔排序实际上是插入排序的范化版本，插入排序可以看成增量固定为1的希尔排序。希尔排序像是多次使用插入排序，每次插入排序的增量不断减小直到为1.
+\begin{itemize}
+    \item 以增量减半作为增量序列的希尔排序
+        \inputminted{c}{codes/shell-sort.c}
+    \item 执行指定增量序列的希尔排序
+        \inputminted{c}{codes/shell-sort-specified-incs.c}
+\end{itemize}
+
+\subsubsection{冒泡排序}
+\inputminted{c}{codes/bubble-sort.c}
+
+\subsubsection{快速排序}
+\inputminted{c}{codes/quick-sort.c}
+\paragraph{应用}
+快速排序中 \mintinline{c}{Partition} 是一个重要的想法。通过这个方法可以做到高效地求得无序数组中第 $k$ 大的元素，采取的方法类似于树中第\ref{find-kth-node-in-bitree}题。
+\begin{enumerate}
+    \item 求无序数组中第 $k\ (1 \le k \le n)$ 大的元素。
+        % TODO 求无序数组中第 k 大的元素。
+\end{enumerate}
+
+
+\subsubsection{选择排序}
+\inputminted{c}{codes/select-sort.c}
+
+\subsubsection{堆排序*}
+TODO 实现堆排序
+
+\subsubsection{归并排序}
+\begin{enumerate}
+    \item 递归版本实现，也是最常见的实现方式
+        \inputminted{c}{codes/merge-sort1.c}
+    \item 非递归实现*，从底向上合并的思想
+        \inputminted{c}{codes/merge-sort2.c}
+\end{enumerate}
+
+\subsubsection{基数排序*}
+基数排序只能用于特定类型的数据的排序，比如整数或字符串，并不是一个通用型排序算法，并且实现需要基数个队列。
+\inputminted{c}{codes/radix-sort.c}
+
+\subsection{查找}
+
+\subsubsection{顺序查找}
+顺序查找一般用于无序的数组内查找元素。
+\begin{minted}{c}
+/* 查找并返回元素下标 */
+int SequenceSearch(int *arr, int len, int x)
+{
+    if (NULL = arr || len <= 0) return -1;
+    for (int i = 0; i < len; i++) {
+        if (x == arr[i])
+            return i;
+    }
+    return -1;
+}
+\end{minted}
+
+\subsubsection{二分查找}
+对于已经有序的数组，二分查找是更为高效的算法，一般假定数据从小到大排序。
+\inputminted{c}{codes/binary-search.c}
 
 
 \end{document}
