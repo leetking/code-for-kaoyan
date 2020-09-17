@@ -1129,7 +1129,7 @@ typedef GListNode *GList;
 快速排序中 \mintinline{c}{Partition} 是一个重要的想法。通过这个方法可以做到高效地求得无序数组中第 $k$ 大的元素，采取的方法类似于树中第\ref{find-kth-node-in-bitree}题。
 \begin{enumerate}
     \item 求无序数组中第 $k\ (1 \le k \le n)$ 大的元素。
-        % TODO 求无序数组中第 k 大的元素。
+        \inputminted{c}{codes/find-kth-in-unsort-array.c}
 \end{enumerate}
 
 
@@ -1137,7 +1137,7 @@ typedef GListNode *GList;
 \inputminted{c}{codes/select-sort.c}
 
 \subsubsection{堆排序*}
-TODO 实现堆排序
+\inputminted{c}{codes/heap-sort.c}
 
 \subsubsection{归并排序}
 \begin{enumerate}
