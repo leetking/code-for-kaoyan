@@ -5,14 +5,19 @@ int idx = 0;
 /* DFS 深度遍历 */
 void PrintAllTraces(BiTree tree)
 {
-    if (NULL == tree) {
+    if (NULL == tree) return;
+    trace[idx] = tree->data;
+    idx++;
+
+    /* leaf */
+    if (tree->lchild != NULL && tree->rchild != NULL) {
         for (int i = 0; i < idx; i++)
             printf("%d ", trace[i]);
         printf("\n");
+        idx--;
         return;
     }
-    trace[idx] = tree->data;
-    idx++;
+
     PrintAllTraces(tree->lchild);
     PrintAllTraces(tree->rchild);
     idx--;

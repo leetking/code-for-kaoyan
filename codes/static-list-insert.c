@@ -9,5 +9,6 @@ bool ListInsert(SeqList *list, int idx, int ele)
         // list.data[i] = list.data[i-1];
     }
     list->data[idx] = ele;
+    list->length += 1;
     return true;
 }
